@@ -1,0 +1,207 @@
+
+ 
+Private Type xyType '定義一個資料型態叫做xytype
+    x As Integer    '設定x和y為整數
+    y As Integer
+End Type
+ 
+Dim sDir As xyType      '表示蛇要走的方向
+Dim shead As xyType     '表示新的頭的座標
+Dim sFood As xyType     '表示食物的座標
+Dim sbody As String     '宣告sbody為字串型態
+Dim sLen As Integer     '宣告sLen為整數
+ 
+ 
+Private Sub Command1_Click()
+ 
+    shead.x = 15        '設定讓第一顆頭的座標在中間
+    shead.y = 15
+       
+    sDir.x = 1          '設定蛇移動的座標
+    sDir.y = 0
+     
+   Picture1.Cls
+   Picture1.FillStyle = 1
+   Picture1.Line (0, 0)-(30, 30), , B   '在picture1的外圍畫一個方框
+   Picture1.PSet (shead.x, shead.y)     '畫出一顆頭的座標在shead.x, shead.y
+     
+    Call newFood           '呼叫畫出食物
+     
+    Me.Timer1.Enabled = True    '讓timer啟動
+    Me.Timer1.Interval = 300    '設定timer為0.3秒跑一次
+    Me.KeyPreview = True        '讓keydown啟動
+   Picture1.SetFocus        '把焦點移到picture1否則按鍵盤的第一個鍵無效
+    sLen = 5                    '把sLen的整數長度設定為5
+     
+    sbody = Chr(shead.x) & Chr(shead.y) '把shead的座標轉為字串,並放入sbody的字串裡面
+     
+    Command1.Enabled = False
+     
+     
+ 
+ 
+End Sub
+ 
+Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
+     
+    Select Case KeyCode     'keycode打錯害我卡很久.....
+        Case 37 '左鍵
+            sDir.x = -1
+            sDir.y = 0
+         
+        Case 38 '上鍵
+            sDir.x = 0
+            sDir.y = -1
+     
+        Case 39 '右鍵
+            sDir.x = 1
+            sDir.y = 0
+ 
+        Case 40 '下鍵
+            sDir.x = 0
+            sDir.y = 1
+        Case 112
+            Me.Timer1.Enabled = Not Me.Timer1.Enabled
+    End Select
+     
+     
+     
+End Sub
+
+Private Sub Form_Load()
+   
+   Picture1.BackColor = vbWhite '設定背景顏色為白色
+   Picture1.ForeColor = vbBlack '設定前景顏色為黑色
+   Picture1.ScaleHeight = 30    '讓pic的高為30
+   Picture1.ScaleWidth = 30     '讓pic的寬為30
+   Picture1.DrawWidth = Picture1.ScaleX(1, 0, 3) 'Drawwidth的屬性是決定圖形的大小
+                                                        '讓畫出來的東西等比例放大
+         
+    Randomize Timer     '亂數
+     
+     
+End Sub
+
+Sub newFood()
+     
+    Do
+        sFood.x = Int(Rnd * 28) + 2        '設定食物的座標
+        sFood.y = Int(Rnd * 28) + 2
+         
+        onbody = flase
+         
+          
+        For i = 1 To Len(body)
+            xy = Mid(sbody, i, 2)
+            x = Asc(Left(xy, 1))            'Asc這邊卡一整天
+            y = Asc(Right(xy, 1))
+             
+            If sFood.x = x And sFood.y = y Then
+                onbody = True
+                Exit For
+            End If
+        Next
+     
+     
+    Loop While onbody = True
+     
+    Picture1.PSet (sFood.x, sFood.y), vbRed     '畫出紅色的食物
+     
+     
+ 
+ 
+End Sub
+
+Sub newhead()
+     
+    shead.x = shead.x + sDir.x      '生出新的頭,sDir決定下一顆頭的方向
+    shead.y = shead.y + sDir.y
+     
+   Picture1.PSet (shead.x, shead.y) '畫出新的頭
+    sbody = sbody & Chr(shead.x) & Chr(shead.y)     '把新頭的座標變成字串,並讓新的頭加入sbody的字串
+     
+End Sub
+ 
+Private Sub Timer1_Timer()
+ 
+     
+    Call newhead    '呼叫產生新的頭
+    Call eatfood    '呼叫如果吃到食物
+    Call cleartail  '呼叫蛇的長度如果過長
+    Call check撞牆
+    Call eatbody
+     
+     
+ 
+End Sub
+ 
+Sub cleartail()
+    
+    If Len(sbody) / 2 > sLen Then   'Len看出sbody字串的長度是否有大於sLen
+        xy = Left(sbody, 2)         'xy為sbody字串的最左邊的兩個字
+        sbody = Mid(sbody, 3)       'sbody的字串長度變成中間的第三個起
+         
+        x = Asc(Left(xy, 1))        '把xy座標的字串轉變為整數
+        y = Asc(Right(xy, 1))
+       
+         
+       Picture1.PSet (x, y), vbWhite       '讓(x,y)座標的頭消失,將它變成白色
+            
+     
+    End If
+     
+End Sub
+
+Sub eatfood()
+    
+    If shead.x = sFood.x And shead.y = sFood.y Then     '判斷新頭的座標是否等於食物
+       Call newFood                                     '如果有，呼叫新的食物
+       sLen = sLen + 3                                  'sLen的長度增加3
+    End If
+    
+    If Timer1.Interval > 80 Then   '如果timer不到80繼續加快
+       Timer1.Interval = Timer1.Interval - 50
+    End If
+         
+End Sub
+
+Sub check撞牆()
+     
+    If shead.x = 0 Or shead.x = 30 Or shead.y = 0 Or shead.y = 30 Then
+        Call youdie
+         
+    End If
+     
+     
+End Sub
+
+Sub eatbody()
+     
+    For i = 1 To Len(sbody) - 2 Step 2
+            xy = Mid(sbody, i, 2)
+            x = Asc(Left(xy, 1))
+            y = Asc(Right(xy, 1))
+             
+            If x = shead.x And y = shead.y Then
+                Call youdie
+                Exit For
+            End If
+             
+    Next
+     
+ 
+End Sub
+
+Sub youdie()
+     
+     Timer1.Enabled = False   '停止計時
+    
+     Picture1.FillStyle = 7
+     Picture1.Line (0, 0)-(30, 30), , B
+    MsgBox "你已經死了", , "GG"
+    
+    Command1.Enabled = True
+    
+     
+     
+End Sub
